@@ -1,0 +1,129 @@
+name: Autograding Tests
+on: 
+  push:
+    branches:
+      - main
+    # paths-ignore:
+    #   - '.github/**'
+env:
+  IMG_URL_RISCV64: https://github.com/Azure-stars/testsuits-for-oskernel/releases/download/v0.1/sdcard-riscv64.img.gz # 镜像url
+  IMG_URL_LOONGARCH64: https://github.com/Azure-stars/testsuits-for-oskernel/releases/download/v0.1/sdcard-loongarch64.img.gz # 镜像url
+  TIMEOUT: 300 # 超时时间
+  SCRIPT_REPO: https://github.com/oscontent25/EvaluationScript # 脚本仓库
+ 
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    env:
+      qemu-version: 9.2.1
+    outputs:
+      details: ${{ steps.autogradingbusyboxmusl.outputs.details }}
+      points: ${{ steps.autogradingbusyboxmusl.outputs.points }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly-2025-01-18
+          components: rust-src, llvm-tools
+          targets: x86_64-unknown-none, riscv64gc-unknown-none-elf, aarch64-unknown-none, aarch64-unknown-none-softfloat, loongarch64-unknown-none
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo install cargo-binutils
+      - uses: ./.github/workflows/setup-musl
+        with:
+          arch: riscv64
+      - uses: ./.github/workflows/setup-musl
+        with:
+          arch: loongarch64
+      - uses: ./.github/workflows/setup-qemu
+        with:
+          qemu-version: ${{ env.qemu-version }}
+      - name: Build python environment
+        run: sudo apt-get install -y python3 python3-pip
+      - name: build os.bin
+        run: |
+          make all
+      - name: run riscv tests
+        run: |
+          wget $IMG_URL_RISCV64 -O sdcard-riscv64.img.gz
+          gunzip sdcard-riscv64.img.gz
+          qemu-system-riscv64 -machine virt -kernel kernel-rv -m 2G -nographic -smp 4 -bios default -drive file=sdcard-riscv64.img,if=none,format=raw,id=x0 \
+                              -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 -no-reboot -device virtio-net-device,netdev=net -netdev user,id=net \
+                              -rtc base=utc \
+                              -drive file=disk.img,if=none,format=raw,id=x1 -device virtio-blk-device,drive=x1,bus=virtio-mmio-bus.1 | tee riscv_output.txt
+      - name: Download EvaluationScript
+        run: |
+          git clone ${{ env.SCRIPT_REPO }} .github/classroom
+      - name: busyboxglibc-test
+        uses: oscontent25/os-autograding@master
+        id: autogradingbusyboxglibc
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/busybox-glibc
+          max-score: 55
+      - name: busyboxmusl-test
+        uses: oscontent25/os-autograding@master
+        id: autogradingbusyboxmusl
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/busybox-musl
+          max-score: 55
+      - name: iozoneglibc-test
+        uses: oscontent25/os-autograding@master
+        id: autogradingiozoneglibc
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/iozone-glibc
+          max-score: 20
+      - name: iozonemusl-test
+        uses: oscontent25/os-autograding@master
+        id: autogradingiozonemusl
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/iozone-musl
+          max-score: 20
+      - name: libctestglibc-test
+        uses: oscontent25/os-autograding@master
+        id: autogradinglibctestglibc
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/libc-test-glibc
+          max-score: 221
+      - name: libctestmusl-test
+        uses: oscontent25/os-autograding@master
+        id: autogradinglibctestmusl
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/libc-test-musl
+          max-score: 221
+      - name: luaglibc-test
+        uses: oscontent25/os-autograding@master
+        id: autogradingluaglibc
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/lua-glibc
+          max-score: 9
+      - name: luamusl-test
+        uses: oscontent25/os-autograding@master
+        id: autogradingluamusl
+        with:
+          outputfile: riscv_output.txt
+          scriptPath: ./.github/classroom/lua-musl
+          max-score: 9
+      - name: Autograding Reporter
+        uses: classroom-resources/autograding-grading-reporter@v1
+        env:
+          AUTOGRADINGBUSYBOXGLIBC_RESULTS: "${{steps.autogradingbusyboxglibc.outputs.result}}"
+          AUTOGRADINGBUSYBOXMUSL_RESULTS: "${{steps.autogradingbusyboxmusl.outputs.result}}"
+          AUTOGRADINGIOZONEGLIBC_RESULTS: "${{steps.autogradingiozoneglibc.outputs.result}}"
+          AUTOGRADINGIOZONEMUSL_RESULTS: "${{steps.autogradingiozonemusl.outputs.result}}"
+          AUTOGRADINGLIBCTESTGLIBC_RESULTS: "${{steps.autogradinglibctestglibc.outputs.result}}"
+          AUTOGRADINGLIBCTESTMUSL_RESULTS: "${{steps.autogradinglibctestmusl.outputs.result}}"
+          AUTOGRADINGLUAGLIBC_RESULTS: "${{steps.autogradingluaglibc.outputs.result}}"
+          AUTOGRADINGLUAMUSL_RESULTS: "${{steps.autogradingluamusl.outputs.result}}"
+        with:
+          runners: autogradingbusyboxglibc,autogradingbusyboxmusl,autogradingiozoneglibc,autogradingiozonemusl,autogradinglibctestglibc,autogradinglibctestmusl,autogradingluaglibc,autogradingluamusl
+          token: ${{ secrets.GITHUB_TOKEN }}
+
