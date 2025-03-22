@@ -20,7 +20,7 @@
 - 一个基本的能运行的 `kernel demo`： [https://github.com/oscomp/starry-next](https://github.com/oscomp/starry-next)
 - 一个能通过所有测例的 `complete kernel reference`：[暂不公布]()
 
-目前已经支持 `libc-test`，`busybox`, `lua`, `iozone` 相关Linux App测例，并且需要分别支持`musl`、`glibc`，测试过程无人工干预，需要由内核自动运行，所有测例文件放在镜像中，内核需要支持 `ext4` 文件系统来读取文件。此外，虽然2025年OS内核赛道需要同时通过riscv和loongarch两种测试，但是本质上区别不大，因此在此只启用riscv。
+目前已经支持 `libc-test`，`busybox`, `lua`, `iozone` 相关Linux App测例，并且需要分别支持`musl`、`glibc`，测试过程无人工干预，需要由内核自动运行，所有测例文件放在镜像中，内核需要支持 `ext4` 文件系统来读取文件。
 
 ## 本地测试
 
@@ -36,7 +36,7 @@ qemu-system-riscv64 -machine virt -kernel kernel-rv -m 2G -nographic -smp 4 -bio
 ## 在线测试
 github的CI对内核进行测试的执行时间设置为 `300` 秒（`5`分钟），超时后程序会被终止，不再继续执行，所得分数为超时前完成的部分的分数。
 
-github的CI执行完毕后，会在你的repo中的 gh-pages 分支下生成相关的 `log` 文件，你可以看到详细的得分情况和总分。
+github的CI执行完毕后，你可以在相应仓库的action中查看详细结果。
 
 ## 注意事项
 - `QEMU` 版本为 `9.2.1`
