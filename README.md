@@ -2,9 +2,13 @@
 **2025年开源操作系统训练营 oskernel训练**
 
 ## 训练邀请：OS kernel设计与实现
-- [点击：创建自己的内核赛道训练repo](https://classroom.github.com/a/NBnQ3JVr)
+- [点击：创建自己的内核赛道训练repo-riscv64](https://classroom.github.com/a/gVahDVzg)
+- [点击：创建自己的内核赛道训练repo-loongarch64](https://classroom.github.com/a/MSB8JGTD)
+- [点击：创建自己的内核赛道训练repo-aarch64](https://classroom.github.com/a/-g7zNh9w)
+- [点击：创建自己的内核赛道训练repo-x86_64](https://classroom.github.com/a/JMgcpmAc)
 - [查看训练排行榜单](https://oscontent25.github.io/classroom-grading-template/)
 
+总共有四个赛道，测试用例基本一致。
 **注：**
 1. **基于Github Classroom，具有在线编程，在线自动评测，在线显示排行榜的特征**
 2. **没学过git/github使用、C/Rust语言、基本数据结构和算法、操作系统和与RISC-V相关的组成原理课程的同学，建议先补一下相关知识**
@@ -20,7 +24,7 @@
 
 ## 本地测试
 
-如你写好OS后，想在在本地测试，评测运行指令如下：
+如你写好OS后，想在在本地测试，以riscv为例，评测运行指令如下：
 
 ```shell
 qemu-system-riscv64 -machine virt -kernel kernel-rv -m 2G -nographic -smp 4 -bios default -drive file=sdcard-riscv64.img,if=none,format=raw,id=x0 \
