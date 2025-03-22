@@ -41,7 +41,7 @@ github的CI执行完毕后，你可以在相应仓库的action中查看详细结
 ## 注意事项
 - `QEMU` 版本为 `9.2.1`
 - `RUST ToolChain` 版本为 `nightly-2025-01-18`
-- 编译目标架构为 `riscv64gc-unknown-none-elf`
+- 编译目标架构为随测试架构不同而变化
 - 内核执行时间为 `5` 分钟
 - 内核可用内存大小为 `2G`
 - 只有 `main` 分支的提交可以被Github 上的CI评测机处理
